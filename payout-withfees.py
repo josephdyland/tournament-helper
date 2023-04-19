@@ -1,8 +1,9 @@
 from flask import Flask, request, render_template
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
-def calculate_payouts(num_players, buy_in, pot_splash):
-    prize_pool = num_players * buy_in + pot_splash
+
+def calculate_payouts(num_players, buy_in, pot_splash, fees):
+    prize_pool = num_players * buy_in + pot_splash - fees
     payouts = {
         1: round(prize_pool * 0.5 / 5) * 5,
         2: round(prize_pool * 0.3 / 5) * 5,
@@ -21,6 +22,7 @@ def calculate_payouts(num_players, buy_in, pot_splash):
             i+= 1
     return prize_pool,payouts
 
+
 def place(num):
     if num == 1:
         return '1st Place'
@@ -30,7 +32,6 @@ def place(num):
         return '3rd Place'
     else:
         return f'{num}th Place'
-
 @app.route('/', methods=["GET", "POST"])
 def payouts():
     error = None
@@ -39,12 +40,15 @@ def payouts():
             num_players = request.form["num_players"]
             buy_in = request.form["buy_in"]
             pot_splash = request.form["pot_splash"]
-            prize_pool, payouts = calculate_payouts(int(num_players), int(buy_in), int(pot_splash))
+            fees = request.form["fees"]
+            prize_pool, payouts = calculate_payouts(int(num_players), int(buy_in), int(pot_splash), int(fees))
         except ValueError:
             error = "Invalid Input. Please enter a valid number only."
         if not error:
-            return render_template('payouts.html', prize_pool=prize_pool,payouts=payouts,num_players=num_players,buy_in=buy_in, pot_splash=pot_splash)
+            return render_template('payouts.html', prize_pool=prize_pool,payouts=payouts,num_players=num_players,buy_in=buy_in, pot_splash=pot_splash, fees=fees)
     return render_template('payouts.html', error=error)
+
+    
 
 @app.route('/contact_us', methods=["GET"])
 def contact_us():
